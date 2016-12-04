@@ -1,6 +1,6 @@
 {
   "name": "camouflage-rewrite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Express middleware to rewrite a request to a different URL and optional also replace it in the response content",
   "main": "index.js",
   "scripts": {
