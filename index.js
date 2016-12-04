@@ -40,7 +40,7 @@ function rewrite (options, req) {
 
 function middleware (options, req, res, next) {
   // do nothing if there are no options
-  if (!options) {
+  if (!options || !options.url) {
     return next()
   }
 
@@ -87,7 +87,7 @@ function middleware (options, req, res, next) {
 }
 
 function factory (options) {
-  if (options) {
+  if (options && options.url) {
     options.urlParts = url.parse(options.url)
   }
 

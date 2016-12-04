@@ -116,6 +116,29 @@ describe('camouflage-rewrite', function () {
         }, done)
     })
 
+    it('should bypass request if no URL is given', function (done) {
+      var app = express()
+
+      app.use(function (req, res, next) {
+        rewrite.middleware({}, req, res, next)
+      })
+
+      app.use(function (req, res) {
+        res.json({
+          host: req.headers.host,
+          path: req.originalUrl
+        })
+      })
+
+      request(app)
+        .get('/path')
+        .set('host', 'example.org')
+        .expect(200, {
+          host: 'example.org',
+          path: '/path'
+        }, done)
+    })
+
     it('should bypass request if media type is not in list', function (done) {
       var app = express()
 
@@ -148,6 +171,7 @@ describe('camouflage-rewrite', function () {
 
       app.use(function (req, res, next) {
         rewrite.middleware({
+          url: 'http://example.com/base/',
           urlParts: url.parse('http://example.com/base/')
         }, req, res, next)
       })
@@ -175,6 +199,7 @@ describe('camouflage-rewrite', function () {
       app.use(function (req, res, next) {
         rewrite.middleware({
           mediaTypes: ['application/json'],
+          url: 'http://example.com/base/',
           urlParts: url.parse('http://example.com/base/')
         }, req, res, next)
       })
