@@ -19,6 +19,8 @@ function origin (iri) {
 function storeOriginal (req) {
   return {
     host: req.headers.host,
+    forwardedHost: req.headers['x-forwarded-host'],
+    forwardedProto: req.headers['x-forwarded-proto'],
     baseUrl: req.baseUrl,
     originalUrl: req.originalUrl,
     url: req.url
@@ -27,6 +29,8 @@ function storeOriginal (req) {
 
 function restoreOriginal (req, original) {
   req.headers.host = original.host
+  req.headers['x-forwarded-host'] = original.forwardedHost
+  req.headers['x-forwarded-proto'] = original.forwardedProto
   req.baseUrl = original.baseUrl
   req.originalUrl = original.originalUrl
   req.url = original.url
@@ -34,6 +38,8 @@ function restoreOriginal (req, original) {
 
 function rewrite (options, req) {
   req.headers.host = options.urlParts.host
+  req.headers['x-forwarded-host'] = options.urlParts.host
+  req.headers['x-forwarded-proto'] = options.urlParts.protocol
   req.baseUrl = path.join(options.urlParts.pathname, req.baseUrl)
   req.originalUrl = path.join(options.urlParts.pathname, req.originalUrl)
 }

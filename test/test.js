@@ -15,10 +15,12 @@ describe('camouflage-rewrite', function () {
   })
 
   describe('storeOriginal', function () {
-    it('should return an object with host, baseUrl, originalUrl and url of the given request', function () {
+    it('should return an object with host, forwardedHost, forwardedProto, baseUrl, originalUrl and url of the given request', function () {
       var req = {
         headers: {
-          host: 'example.org'
+          host: 'example.org',
+          'x-forwarded-host': 'example.com',
+          'x-forwarded-proto': 'https:'
         },
         baseUrl: '/route',
         originalUrl: '/route/path',
@@ -27,6 +29,8 @@ describe('camouflage-rewrite', function () {
 
       var original = {
         host: 'example.org',
+        forwardedHost: 'example.com',
+        forwardedProto: 'https:',
         baseUrl: '/route',
         originalUrl: '/route/path',
         url: '/path'
@@ -44,6 +48,8 @@ describe('camouflage-rewrite', function () {
 
       var original = {
         host: 'example.org',
+        forwardedHost: 'example.com',
+        forwardedProto: 'https:',
         baseUrl: '/route',
         originalUrl: '/route/path',
         url: '/path'
@@ -51,7 +57,9 @@ describe('camouflage-rewrite', function () {
 
       var expected = {
         headers: {
-          host: 'example.org'
+          host: 'example.org',
+          'x-forwarded-host': 'example.com',
+          'x-forwarded-proto': 'https:'
         },
         baseUrl: '/route',
         originalUrl: '/route/path',
@@ -68,7 +76,9 @@ describe('camouflage-rewrite', function () {
     it('should rewrite baseUrl and originalUrl', function () {
       var req = {
         headers: {
-          host: 'example.org:1234'
+          host: 'example.org:1234',
+          'x-forwarded-host': 'example.net',
+          'x-forwarded-proto': 'https:'
         },
         baseUrl: '/route',
         originalUrl: '/route/path'
@@ -80,7 +90,39 @@ describe('camouflage-rewrite', function () {
 
       var expected = {
         headers: {
-          host: 'example.com:4321'
+          host: 'example.com:4321',
+          'x-forwarded-host': 'example.com:4321',
+          'x-forwarded-proto': 'http:'
+        },
+        baseUrl: '/base/route',
+        originalUrl: '/base/route/path'
+      }
+
+      rewrite.rewrite(options, req)
+
+      assert.deepEqual(req, expected)
+    })
+
+    it('should rewrite https URLs', function () {
+      var req = {
+        headers: {
+          host: 'example.org:1234',
+          'x-forwarded-host': 'example.net',
+          'x-forwarded-proto': 'https:'
+        },
+        baseUrl: '/route',
+        originalUrl: '/route/path'
+      }
+
+      var options = {
+        urlParts: url.parse('https://example.com:4321/base/')
+      }
+
+      var expected = {
+        headers: {
+          host: 'example.com:4321',
+          'x-forwarded-host': 'example.com:4321',
+          'x-forwarded-proto': 'https:'
         },
         baseUrl: '/base/route',
         originalUrl: '/base/route/path'

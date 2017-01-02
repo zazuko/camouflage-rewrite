@@ -6,6 +6,7 @@ All middlewares used after the rewrite middleware will see the patched header fi
 Optional it's also possible to rewrite the response content.
 The `res` object is hijacked to pipe the response stream through a string replacement transform.
 No code changes in the other middlewares or handlers are required.
+The proxy header fields `X-Forwarded-Host` and `X-Forwarded-Proto` are used to support `https:` URLs.
 
 ## Usage
 
