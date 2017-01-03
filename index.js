@@ -29,8 +29,19 @@ function storeOriginal (req) {
 
 function restoreOriginal (req, original) {
   req.headers.host = original.host
-  req.headers['x-forwarded-host'] = original.forwardedHost
-  req.headers['x-forwarded-proto'] = original.forwardedProto
+
+  if (original.forwardedHost) {
+    req.headers['x-forwarded-host'] = original.forwardedHost
+  } else {
+    delete req.headers['x-forwarded-host']
+  }
+
+  if (original.forwardedProto) {
+    req.headers['x-forwarded-proto'] = original.forwardedProto
+  } else {
+    delete req.headers['x-forwarded-proto']
+  }
+
   req.baseUrl = original.baseUrl
   req.originalUrl = original.originalUrl
   req.url = original.url

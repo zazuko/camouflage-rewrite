@@ -70,6 +70,34 @@ describe('camouflage-rewrite', function () {
 
       assert.deepEqual(req, expected)
     })
+
+    it('should remove forwarded headers if the values are null', function () {
+      var req = {
+        headers: {}
+      }
+
+      var original = {
+        host: 'example.org',
+        forwardedHost: null,
+        forwardedProto: null,
+        baseUrl: '/route',
+        originalUrl: '/route/path',
+        url: '/path'
+      }
+
+      var expected = {
+        headers: {
+          host: 'example.org',
+        },
+        baseUrl: '/route',
+        originalUrl: '/route/path',
+        url: '/path'
+      }
+
+      rewrite.restoreOriginal(req, original)
+
+      assert.deepEqual(req, expected)
+    })
   })
 
   describe('rewrite', function () {
