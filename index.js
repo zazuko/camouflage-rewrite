@@ -94,6 +94,8 @@ function middleware (options, req, res, next) {
       // replace url with origin (protocol + host + '/')
       var requestOrigin = origin(req.absoluteUrl())
 
+      res.removeHeader('content-length')
+
       res.pipe(replace(options.url, requestOrigin)).pipe(res)
     } else {
       res.pipe(res)
