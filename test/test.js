@@ -87,7 +87,7 @@ describe('camouflage-rewrite', function () {
 
       var expected = {
         headers: {
-          host: 'example.org',
+          host: 'example.org'
         },
         baseUrl: '/route',
         originalUrl: '/route/path',
