@@ -73,7 +73,6 @@ function middleware (options, req, res, next) {
   }
 
   // store original request parameters
-  console.log(req.headers)
   var original = storeOriginal(req)
 
   // rewrite request parameters
