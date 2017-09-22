@@ -330,6 +330,33 @@ describe('camouflage-rewrite', function () {
         .set('host', 'example.org')
         .expect(200, 'http://example.org/path', done)
     })
+
+    it('should rewrite headers if rewriteHeaders is true', function () {
+      var app = express()
+
+      app.use(function (req, res, next) {
+        rewrite.middleware({
+          rewriteHeaders: true,
+          url: 'http://example.com/base/',
+          urlParts: url.parse('http://example.com/base/')
+        }, req, res, next)
+      })
+
+      app.use(function (req, res) {
+        res.links({
+          'http://www.w3.org/ns/json-ld#context': 'http://example.com/base/context'
+        })
+
+        res.end('http://example.com/base/path')
+      })
+
+      return request(app)
+        .get('/path')
+        .set('host', 'example.org')
+        .then(function (res) {
+          assert.notEqual(res.get('link').indexOf('http://example.org/'), -1)
+        })
+    })
   })
 
   describe('factory', function () {

@@ -88,12 +88,18 @@ function middleware (options, req, res, next) {
     // restore original request parameters
     restoreOriginal(req, original)
 
+    absoluteUrl.attach(req)
+
+    // replace url with origin (protocol + host + '/')
+    var requestOrigin = origin(req.absoluteUrl())
+
+    if (options.rewriteHeaders) {
+      Object.keys(res._headers).forEach(function (field) {
+        res._headers[field] = res._headers[field].split(options.url).join(requestOrigin)
+      })
+    }
+
     if (options.rewriteContent) {
-      absoluteUrl.attach(req)
-
-      // replace url with origin (protocol + host + '/')
-      var requestOrigin = origin(req.absoluteUrl())
-
       res.removeHeader('content-length')
 
       res.pipe(replace(options.url, requestOrigin)).pipe(res)

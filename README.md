@@ -17,6 +17,7 @@ The following options are supported:
 - mediaTypes: An array of media types which will be processed.
   The `Accept` header field is used for the test. (optional)
 - rewriteContent: If it's set to true the response content will be also rewritten.
+- rewriteHeaders: If it's set to true the response headers will be also rewritten.
 - url: The internal/camouflage URL which will replace the request URL.
 
 ## Example
