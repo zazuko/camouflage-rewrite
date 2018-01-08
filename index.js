@@ -95,7 +95,7 @@ function middleware (options, req, res, next) {
 
     if (options.rewriteHeaders) {
       Object.keys(res._headers).forEach(function (field) {
-        res._headers[field] = res._headers[field].split(options.url).join(requestOrigin)
+        res._headers[field] = res._headers[field].toString().split(options.url).join(requestOrigin)
       })
     }
 
