@@ -1,19 +1,19 @@
 'use strict'
 
-var absoluteUrl = require('absolute-url')
-var hijackResponse = require('hijackresponse')
-var path = require('path')
-var replace = require('string-replace-stream')
-var url = require('url')
+const absoluteUrl = require('absolute-url')
+const hijackResponse = require('hijackresponse')
+const URL = require('url').URL
+const path = require('path')
+const replace = require('string-replace-stream')
 
 function origin (iri) {
-  var parts = url.parse(iri)
+  const parts = new URL(iri)
+  parts.pathname = '/'
+  parts.search = ''
+  parts.username = ''
+  parts.password = ''
 
-  return url.format({
-    protocol: parts.protocol,
-    host: parts.host,
-    pathname: '/'
-  })
+  return parts.toString()
 }
 
 function storeOriginal (req) {
@@ -63,7 +63,7 @@ function middleware (options, req, res, next) {
 
   // only process configured media types
   if (options.mediaTypes) {
-    var matches = options.mediaTypes.filter(function (mediaType) {
+    const matches = options.mediaTypes.filter(function (mediaType) {
       return req.accepts(mediaType)
     })
 
@@ -73,7 +73,7 @@ function middleware (options, req, res, next) {
   }
 
   // store original request parameters
-  var original = storeOriginal(req)
+  const original = storeOriginal(req)
 
   // rewrite request parameters
   rewrite(options, req)
@@ -91,11 +91,11 @@ function middleware (options, req, res, next) {
     absoluteUrl.attach(req)
 
     // replace url with origin (protocol + host + '/')
-    var requestOrigin = origin(req.absoluteUrl())
+    const requestOrigin = origin(req.absoluteUrl())
 
     if (options.rewriteHeaders) {
-      Object.keys(res._headers).forEach(function (field) {
-        res.header(field, res._headers[field].toString().split(options.url).join(requestOrigin))
+      Object.keys(res.getHeaders()).forEach(function (field) {
+        res.header(field, res.getHeaders()[field].toString().split(options.url).join(requestOrigin))
       })
     }
 
@@ -113,7 +113,7 @@ function middleware (options, req, res, next) {
 
 function factory (options) {
   if (options && options.url) {
-    options.urlParts = url.parse(options.url)
+    options.urlParts = new URL(options.url)
   }
 
   return middleware.bind(null, options)

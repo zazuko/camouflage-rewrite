@@ -1,22 +1,22 @@
 /* global describe it */
 
-var assert = require('assert')
-var express = require('express')
-var request = require('supertest')
-var rewrite = require('..')
-var url = require('url')
+const assert = require('assert')
+const express = require('express')
+const request = require('supertest')
+const rewrite = require('..')
+const URL = require('url').URL
 
-describe('camouflage-rewrite', function () {
-  describe('origin', function () {
-    it('should return a URL that contains protocol, host and port of the given URL with a trailing slash', function () {
+describe('camouflage-rewrite', () => {
+  describe('origin', () => {
+    it('should return a URL that contains protocol, host and port of the given URL with a trailing slash', () => {
       assert.equal(rewrite.origin('http://localhost/'), 'http://localhost/')
       assert.equal(rewrite.origin('https://example.org:1234/example'), 'https://example.org:1234/')
     })
   })
 
-  describe('storeOriginal', function () {
-    it('should return an object with host, forwardedHost, forwardedProto, baseUrl, originalUrl and url of the given request', function () {
-      var req = {
+  describe('storeOriginal', () => {
+    it('should return an object with host, forwardedHost, forwardedProto, baseUrl, originalUrl and url of the given request', () => {
+      const req = {
         headers: {
           host: 'example.org',
           'x-forwarded-host': 'example.com',
@@ -27,7 +27,7 @@ describe('camouflage-rewrite', function () {
         url: '/path'
       }
 
-      var original = {
+      const original = {
         host: 'example.org',
         forwardedHost: 'example.com',
         forwardedProto: 'https:',
@@ -40,13 +40,13 @@ describe('camouflage-rewrite', function () {
     })
   })
 
-  describe('restoreOriginal', function () {
-    it('should set host, baseUrl, originalUrl and url of given request based on the given object', function () {
-      var req = {
+  describe('restoreOriginal', () => {
+    it('should set host, baseUrl, originalUrl and url of given request based on the given object', () => {
+      const req = {
         headers: {}
       }
 
-      var original = {
+      const original = {
         host: 'example.org',
         forwardedHost: 'example.com',
         forwardedProto: 'https:',
@@ -55,7 +55,7 @@ describe('camouflage-rewrite', function () {
         url: '/path'
       }
 
-      var expected = {
+      const expected = {
         headers: {
           host: 'example.org',
           'x-forwarded-host': 'example.com',
@@ -67,16 +67,15 @@ describe('camouflage-rewrite', function () {
       }
 
       rewrite.restoreOriginal(req, original)
-
       assert.deepEqual(req, expected)
     })
 
-    it('should remove forwarded headers if the values are null', function () {
-      var req = {
+    it('should remove forwarded headers if the values are null', () => {
+      const req = {
         headers: {}
       }
 
-      var original = {
+      const original = {
         host: 'example.org',
         forwardedHost: null,
         forwardedProto: null,
@@ -85,7 +84,7 @@ describe('camouflage-rewrite', function () {
         url: '/path'
       }
 
-      var expected = {
+      const expected = {
         headers: {
           host: 'example.org'
         },
@@ -95,14 +94,13 @@ describe('camouflage-rewrite', function () {
       }
 
       rewrite.restoreOriginal(req, original)
-
       assert.deepEqual(req, expected)
     })
   })
 
   describe('rewrite', function () {
     it('should rewrite baseUrl and originalUrl', function () {
-      var req = {
+      const req = {
         headers: {
           host: 'example.org:1234',
           'x-forwarded-host': 'example.net',
@@ -112,11 +110,11 @@ describe('camouflage-rewrite', function () {
         originalUrl: '/route/path'
       }
 
-      var options = {
-        urlParts: url.parse('http://example.com:4321/base/')
+      const options = {
+        urlParts: new URL('http://example.com:4321/base/')
       }
 
-      var expected = {
+      const expected = {
         headers: {
           host: 'example.com:4321',
           'x-forwarded-host': 'example.com:4321',
@@ -127,12 +125,11 @@ describe('camouflage-rewrite', function () {
       }
 
       rewrite.rewrite(options, req)
-
       assert.deepEqual(req, expected)
     })
 
     it('should rewrite https URLs', function () {
-      var req = {
+      const req = {
         headers: {
           host: 'example.org:1234',
           'x-forwarded-host': 'example.net',
@@ -142,11 +139,11 @@ describe('camouflage-rewrite', function () {
         originalUrl: '/route/path'
       }
 
-      var options = {
-        urlParts: url.parse('https://example.com:4321/base/')
+      const options = {
+        urlParts: new URL('https://example.com:4321/base/')
       }
 
-      var expected = {
+      const expected = {
         headers: {
           host: 'example.com:4321',
           'x-forwarded-host': 'example.com:4321',
@@ -157,14 +154,13 @@ describe('camouflage-rewrite', function () {
       }
 
       rewrite.rewrite(options, req)
-
       assert.deepEqual(req, expected)
     })
   })
 
   describe('middleware', function () {
     it('should bypass request if no options are given', function (done) {
-      var app = express()
+      const app = express()
 
       app.use(function (req, res, next) {
         rewrite.middleware(null, req, res, next)
@@ -187,7 +183,7 @@ describe('camouflage-rewrite', function () {
     })
 
     it('should bypass request if no URL is given', function (done) {
-      var app = express()
+      const app = express()
 
       app.use(function (req, res, next) {
         rewrite.middleware({}, req, res, next)
@@ -210,12 +206,12 @@ describe('camouflage-rewrite', function () {
     })
 
     it('should bypass request if media type is not in list', function (done) {
-      var app = express()
+      const app = express()
 
       app.use(function (req, res, next) {
         rewrite.middleware({
           mediaTypes: ['text/html'],
-          urlParts: url.parse('http://example.com/base/')
+          urlParts: new URL('http://example.com/base/')
         }, req, res, next)
       })
 
@@ -237,12 +233,12 @@ describe('camouflage-rewrite', function () {
     })
 
     it('should handle request if no media type is given', function (done) {
-      var app = express()
+      const app = express()
 
       app.use(function (req, res, next) {
         rewrite.middleware({
           url: 'http://example.com/base/',
-          urlParts: url.parse('http://example.com/base/')
+          urlParts: new URL('http://example.com/base/')
         }, req, res, next)
       })
 
@@ -264,13 +260,13 @@ describe('camouflage-rewrite', function () {
     })
 
     it('should handle request if media type is in given list', function (done) {
-      var app = express()
+      const app = express()
 
       app.use(function (req, res, next) {
         rewrite.middleware({
           mediaTypes: ['application/json'],
           url: 'http://example.com/base/',
-          urlParts: url.parse('http://example.com/base/')
+          urlParts: new URL('http://example.com/base/')
         }, req, res, next)
       })
 
@@ -291,16 +287,16 @@ describe('camouflage-rewrite', function () {
         }, done)
     })
 
-    it('should not touch content of rewriteContent is false', function (done) {
-      var app = express()
+    it('should not touch content of rewriteContent is false', (done) => {
+      const app = express()
 
-      app.use(function (req, res, next) {
+      app.use((req, res, next) => {
         rewrite.middleware({
-          urlParts: url.parse('http://example.com/base/')
+          urlParts: new URL('http://example.com/base/')
         }, req, res, next)
       })
 
-      app.use(function (req, res) {
+      app.use((_req, res) => {
         res.end('http://example.com/base/path')
       })
 
@@ -310,18 +306,18 @@ describe('camouflage-rewrite', function () {
         .expect(200, 'http://example.com/base/path', done)
     })
 
-    it('should rewrite content if rewriteContent is true', function (done) {
-      var app = express()
+    it('should rewrite content if rewriteContent is true', (done) => {
+      const app = express()
 
-      app.use(function (req, res, next) {
+      app.use((req, res, next) => {
         rewrite.middleware({
           rewriteContent: true,
           url: 'http://example.com/base/',
-          urlParts: url.parse('http://example.com/base/')
+          urlParts: new URL('http://example.com/base/')
         }, req, res, next)
       })
 
-      app.use(function (req, res) {
+      app.use((_req, res) => {
         res.end('http://example.com/base/path')
       })
 
@@ -331,18 +327,18 @@ describe('camouflage-rewrite', function () {
         .expect(200, 'http://example.org/path', done)
     })
 
-    it('should rewrite headers if rewriteHeaders is true', function () {
-      var app = express()
+    it('should rewrite headers if rewriteHeaders is true', async () => {
+      const app = express()
 
-      app.use(function (req, res, next) {
+      app.use((req, res, next) => {
         rewrite.middleware({
           rewriteHeaders: true,
           url: 'http://example.com/base/',
-          urlParts: url.parse('http://example.com/base/')
+          urlParts: new URL('http://example.com/base/')
         }, req, res, next)
       })
 
-      app.use(function (req, res) {
+      app.use((_req, res) => {
         res.links({
           'http://www.w3.org/ns/json-ld#context': 'http://example.com/base/context'
         })
@@ -350,22 +346,20 @@ describe('camouflage-rewrite', function () {
         res.end('http://example.com/base/path')
       })
 
-      return request(app)
+      const res2 = await request(app)
         .get('/path')
         .set('host', 'example.org')
-        .then(function (res) {
-          assert.notEqual(res.get('link').indexOf('http://example.org/'), -1)
-        })
+      assert.notEqual(res2.get('link').indexOf('http://example.org/'), -1)
     })
   })
 
-  describe('factory', function () {
+  describe('factory', () => {
     it('should build a middleware which handles options = null', function (done) {
-      var app = express()
+      const app = express()
 
       app.use(rewrite())
 
-      app.use(function (req, res) {
+      app.use((_req, res) => {
         res.end('http://example.com/base/path')
       })
 
@@ -375,15 +369,15 @@ describe('camouflage-rewrite', function () {
         .expect(200, 'http://example.com/base/path', done)
     })
 
-    it('should build the middleware and parse the URL into URL parts', function (done) {
-      var app = express()
+    it('should build the middleware and parse the URL into URL parts', (done) => {
+      const app = express()
 
       app.use(rewrite({
         rewriteContent: true,
         url: 'http://example.com/base/'
       }))
 
-      app.use(function (req, res) {
+      app.use((_req, res) => {
         res.end('http://example.com/base/path')
       })
 
