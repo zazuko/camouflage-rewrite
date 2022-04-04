@@ -1,33 +1,31 @@
 'use strict'
 
-var absoluteUrl = require('absolute-url')
-var hijackResponse = require('hijackresponse')
-var path = require('path')
-var replace = require('string-replace-stream')
-var url = require('url')
+const absoluteUrl = require('absolute-url')
+const hijackResponse = require('hijackresponse')
+const URL = require('url').URL
+const path = require('path')
+const replace = require('string-replace-stream')
 
-function origin (iri) {
-  var parts = url.parse(iri)
+const origin = (iri) => {
+  const parts = new URL(iri)
+  parts.pathname = '/'
+  parts.search = ''
+  parts.username = ''
+  parts.password = ''
 
-  return url.format({
-    protocol: parts.protocol,
-    host: parts.host,
-    pathname: '/'
-  })
+  return parts.toString()
 }
 
-function storeOriginal (req) {
-  return {
-    host: req.headers.host,
-    forwardedHost: req.headers['x-forwarded-host'],
-    forwardedProto: req.headers['x-forwarded-proto'],
-    baseUrl: req.baseUrl,
-    originalUrl: req.originalUrl,
-    url: req.url
-  }
-}
+const storeOriginal = (req) => ({
+  host: req.headers.host,
+  forwardedHost: req.headers['x-forwarded-host'],
+  forwardedProto: req.headers['x-forwarded-proto'],
+  baseUrl: req.baseUrl,
+  originalUrl: req.originalUrl,
+  url: req.url
+})
 
-function restoreOriginal (req, original) {
+const restoreOriginal = (req, original) => {
   req.headers.host = original.host
 
   if (original.forwardedHost) {
@@ -47,7 +45,7 @@ function restoreOriginal (req, original) {
   req.url = original.url
 }
 
-function rewrite (options, req) {
+const rewrite = (options, req) => {
   req.headers.host = options.urlParts.host
   req.headers['x-forwarded-host'] = options.urlParts.host
   req.headers['x-forwarded-proto'] = options.urlParts.protocol
@@ -55,7 +53,7 @@ function rewrite (options, req) {
   req.originalUrl = path.join(options.urlParts.pathname, req.originalUrl)
 }
 
-function middleware (options, req, res, next) {
+const middleware = (options, req, res, next) => {
   // do nothing if there are no options
   if (!options || !options.url) {
     return next()
@@ -63,7 +61,7 @@ function middleware (options, req, res, next) {
 
   // only process configured media types
   if (options.mediaTypes) {
-    var matches = options.mediaTypes.filter(function (mediaType) {
+    const matches = options.mediaTypes.filter((mediaType) => {
       return req.accepts(mediaType)
     })
 
@@ -73,12 +71,12 @@ function middleware (options, req, res, next) {
   }
 
   // store original request parameters
-  var original = storeOriginal(req)
+  const original = storeOriginal(req)
 
   // rewrite request parameters
   rewrite(options, req)
 
-  hijackResponse(res, function (err, res) {
+  hijackResponse(res, (err, res) => {
     if (err) {
       res.unhijack()
 
@@ -91,11 +89,11 @@ function middleware (options, req, res, next) {
     absoluteUrl.attach(req)
 
     // replace url with origin (protocol + host + '/')
-    var requestOrigin = origin(req.absoluteUrl())
+    const requestOrigin = origin(req.absoluteUrl())
 
     if (options.rewriteHeaders) {
-      Object.keys(res._headers).forEach(function (field) {
-        res.header(field, res._headers[field].toString().split(options.url).join(requestOrigin))
+      Object.keys(res.getHeaders()).forEach((field) => {
+        res.header(field, res.getHeaders()[field].toString().split(options.url).join(requestOrigin))
       })
     }
 
@@ -111,9 +109,9 @@ function middleware (options, req, res, next) {
   next()
 }
 
-function factory (options) {
+const factory = (options) => {
   if (options && options.url) {
-    options.urlParts = url.parse(options.url)
+    options.urlParts = new URL(options.url)
   }
 
   return middleware.bind(null, options)
