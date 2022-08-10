@@ -351,6 +351,34 @@ describe('camouflage-rewrite', () => {
         .set('host', 'example.org')
       assert.notEqual(res2.get('link').indexOf('http://example.org/'), -1)
     })
+
+    it('should bypass request if it matches the ignore pattern', async () => {
+      const app = express()
+
+      app.use((req, res, next) => {
+        rewrite.middleware({
+          ignore: 'http(s)?://example.org/path',
+          rewriteContent: true,
+          url: 'http://example.com/base/',
+          urlParts: new URL('http://example.com/base/')
+        }, req, res, next)
+      })
+
+      app.use((_req, res) => {
+        res.links({
+          'http://www.w3.org/ns/json-ld#context': 'http://example.com/base/context'
+        })
+
+        res.end('http://example.com/base/path')
+      })
+
+      const res = await request(app)
+        .get('/path')
+        .set('host', 'example.org')
+
+      assert.strictEqual(res.get('link').includes('http://example.com/base/context'), true)
+      assert.strictEqual(res.text, 'http://example.com/base/path')
+    })
   })
 
   describe('factory', () => {

@@ -70,6 +70,8 @@ const middleware = (options, req, res, next) => {
     }
   }
 
+  const ignorePattern = options.ignore && new RegExp(options.ignore)
+
   // store original request parameters
   const original = storeOriginal(req)
 
@@ -88,8 +90,14 @@ const middleware = (options, req, res, next) => {
 
     absoluteUrl.attach(req)
 
+    const url = req.absoluteUrl()
+
+    if (ignorePattern && ignorePattern.test(url)) {
+      return res.pipe(res)
+    }
+
     // replace url with origin (protocol + host + '/')
-    const requestOrigin = origin(req.absoluteUrl())
+    const requestOrigin = origin(url)
 
     if (options.rewriteHeaders) {
       Object.keys(res.getHeaders()).forEach((field) => {
