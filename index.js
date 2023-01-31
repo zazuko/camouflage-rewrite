@@ -75,6 +75,10 @@ const middleware = (options, req, res, next) => {
   // store original request parameters
   const original = storeOriginal(req)
 
+  // allow other middlewares to access the original address (by using `res.locals.camouflageRewriteOriginalUrl`)
+  absoluteUrl.attach(req)
+  res.locals.camouflageRewriteOriginalUrl = req.absoluteUrl()
+
   // rewrite request parameters
   rewrite(options, req)
 
